@@ -1,0 +1,20 @@
+{
+  "name": "todo-bdd",
+  "version": "1.0.0",
+  "description": "Application To-do (IndexedDB) testée en BDD : Cucumber (Gherkin) + Playwright, avec CI GitHub Actions",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "cucumber-js",
+    "test:reel": "cucumber-js --profile reel",
+    "navigateurs": "playwright install chromium"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "13.3.0",
+    "@playwright/test": "1.56.0",
+    "playwright": "1.56.0"
+  }
+}

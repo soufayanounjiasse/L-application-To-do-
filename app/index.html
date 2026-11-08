@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mes tâches</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Mes tâches</h1>
+    <p id="statut-db" data-testid="statut-db">Base locale : ouverture en cours…</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="titre-projets">
+      <h2 id="titre-projets">Projets</h2>
+      <form id="form-projet" novalidate>
+        <label for="nom-projet">Nom du projet</label>
+        <input id="nom-projet" data-testid="nom-projet" type="text" maxlength="80" autocomplete="off">
+        <button type="submit">Ajouter le projet</button>
+      </form>
+      <p id="erreur-projet" class="erreur" role="alert" data-testid="erreur-projet"></p>
+      <ul id="liste-projets" data-testid="liste-projets"></ul>
+    </section>
+
+    <section aria-labelledby="titre-taches">
+      <h2 id="titre-taches">Tâches</h2>
+      <form id="form-tache" novalidate>
+        <label for="titre-tache">Titre</label>
+        <input id="titre-tache" data-testid="titre-tache" type="text" maxlength="150" autocomplete="off">
+
+        <label for="description-tache">Description</label>
+        <textarea id="description-tache" data-testid="description-tache" rows="2"></textarea>
+
+        <label for="projet-tache">Projet</label>
+        <select id="projet-tache" data-testid="projet-tache"></select>
+
+        <label for="priorite-tache">Priorité</label>
+        <select id="priorite-tache" data-testid="priorite-tache">
+          <option value="basse">Basse</option>
+          <option value="normale" selected>Normale</option>
+          <option value="haute">Haute</option>
+        </select>
+
+        <div class="actions">
+          <button type="submit" id="bouton-tache">Ajouter la tâche</button>
+          <button type="button" id="annuler-edition" hidden>Annuler</button>
+        </div>
+      </form>
+      <p id="erreur-tache" class="erreur" role="alert" data-testid="erreur-tache"></p>
+
+      <div class="filtres">
+        <label for="filtre-projet">Filtrer par projet</label>
+        <select id="filtre-projet" data-testid="filtre-projet"></select>
+        <label for="filtre-statut">Filtrer par statut</label>
+        <select id="filtre-statut" data-testid="filtre-statut">
+          <option value="">Toutes</option>
+          <option value="a-faire">À faire</option>
+          <option value="terminee">Terminées</option>
+        </select>
+      </div>
+
+      <p id="compteur" data-testid="compteur"></p>
+      <ul id="liste-taches" data-testid="liste-taches"></ul>
+    </section>
+  </main>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
