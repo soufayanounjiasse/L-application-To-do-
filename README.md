@@ -134,7 +134,7 @@ git init
 git add .
 git commit -m "Application To-do et tests BDD"
 git branch -M main
-git remote add origin https://github.com/VOTRE-COMPTE/VOTRE-DEPOT.git
+git remote add origin https://github.com/soufayanounjiasse/L-application-To-do-.git/
 git push -u origin main
 ```
 
