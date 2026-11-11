@@ -82,6 +82,14 @@ When('je filtre les tâches par le statut {string}', async function (statut) {
   await this.page.getByTestId('filtre-statut').selectOption({ label: statut });
 });
 
+When('je clique sur le projet {string}', async function (projet) {
+  await this.projetLi(projet).getByTestId('projet-nom').click();
+});
+
+When("j'affiche toutes les tâches", async function () {
+  await this.page.getByRole('button', { name: /Toutes les tâches/ }).click();
+});
+
 // ------------------------------------------------------------------ vérifications
 Then('la liste des tâches contient {string}', async function (titre) {
   await expect.poll(() => this.titresTaches()).toContain(titre);
@@ -127,3 +135,12 @@ Then('le formulaire de tâche est en mode ajout', async function () {
   await expect(this.page.getByRole('button', { name: 'Ajouter la tâche' })).toBeVisible();
   await expect(this.page.getByTestId('titre-tache')).toHaveValue('');
 });
+
+Then(
+  'le tableau de bord affiche {int} au total, {int} à faire et {int} terminée(s)',
+  async function (total, aFaire, terminees) {
+    await expect(this.page.getByTestId('stat-total')).toHaveText(String(total));
+    await expect(this.page.getByTestId('stat-afaire')).toHaveText(String(aFaire));
+    await expect(this.page.getByTestId('stat-terminees')).toHaveText(String(terminees));
+  }
+);

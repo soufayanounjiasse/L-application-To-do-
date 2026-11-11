@@ -36,8 +36,8 @@ export function ouvrirBase() {
       const projets = db.createObjectStore('projects', { keyPath: 'id', autoIncrement: true });
       projets.createIndex('nomNormalise', 'nomNormalise', { unique: true });
       const taches = db.createObjectStore('tasks', { keyPath: 'id', autoIncrement: true });
-      taches.createIndex('projectId', 'projectId', { unique: false });
-      taches.createIndex('statut', 'statut', { unique: false });
+      taches.createIndex('projectId', 'projectId');            // index non unique (par défaut)
+      taches.createIndex('statut', 'statut');
     };
     requete.onsuccess = () => resolve(requete.result);
     requete.onerror = () => {
@@ -79,7 +79,7 @@ async function transaction(noms, mode, travail) {
   return resultat;
 }
 
-const normaliser = (texte) => texte.trim().toLocaleLowerCase('fr');
+const normaliser = (texte) => texte.toLocaleLowerCase('fr');          // le texte est déjà nettoyé par l'appelant
 
 function validerTitre(titre) {
   const propre = String(titre ?? '').trim();
@@ -108,7 +108,7 @@ export async function ajouterProjet(nom) {
     const id = await transaction(['projects'], 'readwrite', (projets) => demander(projets.add(projet)));
     return { ...projet, id };
   } catch (erreur) {
-    if (erreur && erreur.name === 'ConstraintError') {
+    if (erreur.name === 'ConstraintError') {
       throw new ErreurMetier('Un projet avec ce nom existe déjà.');
     }
     throw erreur;

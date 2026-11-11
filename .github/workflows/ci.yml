@@ -1,17 +1,17 @@
-# Pipeline d'intégration continue : les tests BDD se lancent à CHAQUE push (toutes les branches)
-# et à chaque pull request. Le résultat apparaît dans l'onglet "Actions" du dépôt GitHub.
+# Les tests se lancent à CHAQUE push (toutes les branches) et à chaque pull request.
+#  - job "tests"     : tests unitaires + couverture (quality gate) + tests BDD
+#  - job "mutation"  : test de mutation (StrykerJS, équivalent de PIT) ; le job échoue sous le seuil de 80 %
 name: ci
 
 on:
   push:
   pull_request:
-  workflow_dispatch:        # permet aussi de le lancer à la main depuis l'onglet Actions
+  workflow_dispatch:
 
 jobs:
-  tests-bdd:
+  tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 20
     steps:
       - name: Récupérer le code
         uses: actions/checkout@v4
@@ -25,16 +25,43 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
 
+      - name: Tests unitaires et couverture (Vitest, seuils de couverture)
+        run: npm run test:unit
+
       - name: Installer le navigateur Chromium de Playwright
         run: npx playwright install --with-deps chromium
 
-      - name: Lancer les tests BDD (Cucumber + Playwright)
-        run: npm test
+      - name: Tests BDD (Cucumber + Playwright)
+        run: npm run test:bdd
 
-      - name: Publier les rapports de tests
-        if: always()          # même si les tests échouent : on veut lire le rapport
+      - name: Publier les rapports de tests et de couverture
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rapports-bdd
+          name: rapports-tests
           path: reports/
+          if-no-files-found: ignore
+
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Test de mutation (StrykerJS)
+        run: npm run test:mutation
+
+      - name: Publier le rapport de mutation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-mutation
+          path: reports/mutation/
           if-no-files-found: ignore

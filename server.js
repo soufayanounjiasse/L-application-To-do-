@@ -1,13 +1,11 @@
 // Petit serveur statique, sans dépendance :
-//   - sert l'application (dossier app/) ;
-//   - sert un FAUX site de connexion "à la GitHub" sous /mock/github/ pour les tests déterministes.
+//   - sert l'application (dossier app/).
 // Utilisation : "npm start" (http://localhost:3000) ou démarré automatiquement par les tests.
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
 const RACINE_APP = path.join(__dirname, 'app');
-const RACINE_MOCK = path.join(__dirname, 'features', 'support', 'mock-github');
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -18,11 +16,7 @@ const TYPES = {
 
 function resoudre(urlBrute) {
   let chemin = decodeURIComponent(new URL(urlBrute, 'http://localhost').pathname);
-  let base = RACINE_APP;
-  if (chemin === '/mock/github' || chemin.startsWith('/mock/github/')) {
-    base = RACINE_MOCK;
-    chemin = chemin.slice('/mock/github'.length);
-  }
+  const base = RACINE_APP;
   if (chemin === '' || chemin.endsWith('/')) chemin += 'index.html';
   if (!path.extname(chemin)) chemin += '.html';
   const complet = path.normalize(path.join(base, chemin));

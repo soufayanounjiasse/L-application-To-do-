@@ -2,30 +2,42 @@
 
 Devoir INF563 : application de tâches rattachées à des projets, sauvegardée dans **IndexedDB**, et testée en
 **BDD** (scénarios Gherkin en français exécutés par **Cucumber.js**, navigateur piloté par **Playwright**).
-Les tests se déclenchent à chaque `git push` grâce à **GitHub Actions**. Un test BDD de **connexion à GitHub**
-est aussi fourni.
+Les tests se déclenchent à chaque `git push` grâce à **GitHub Actions**.
+
+> Le devoir « test de connexion à un compte GitHub » est un **projet séparé** (`github-login-bdd`, aussi en
+> JavaScript) : il a son propre dépôt, ses propres tests et son propre pipeline.
 
 ## Ce que contient le projet
 
 ```
 app/                         l'application (HTML, CSS, JavaScript, sans framework)
   js/db.js                   toute la persistance : base IndexedDB "todo-db" (projets, tâches)
+  js/statistiques.js         fonctions pures : pluriel, couleur, avancement, résumé
   js/app.js                  l'interface
 features/
-  connexion_github.feature   BDD : connexion à un compte GitHub
   projets.feature            BDD : création / suppression de projets
   taches.feature             BDD : ajout, modification, déplacement, filtres de tâches
   persistance_indexeddb.feature   BDD : ce qui est réellement stocké dans la base du navigateur
   step_definitions/          le code Playwright derrière chaque phrase
-  support/                   démarrage du navigateur, faux site de connexion GitHub, "monde" Cucumber
-server.js                    petit serveur local (application + faux site de connexion)
+  support/                   démarrage du navigateur et "monde" Cucumber (outils Playwright partagés)
+tests-unitaires/             tests unitaires Vitest (db, statistiques) et outils (pairwise, ulp)
+vitest.config.mjs            configuration de Vitest et seuils de couverture
+stryker.config.json          configuration du test de mutation
+server.js                    petit serveur local qui sert l'application
 .github/workflows/ci.yml     pipeline : tests à chaque push
 cucumber.cjs                 configuration de Cucumber (rapports HTML et JUnit)
 ```
 
 **Fonctionnalités de l'application** : créer / supprimer des projets (nom unique, sans tenir compte de la casse) ;
 ajouter / modifier / terminer / supprimer des tâches (titre, description, priorité, projet) ; déplacer une tâche
-vers un autre projet ; filtrer par projet ou par statut. Supprimer un projet supprime ses tâches (même transaction).
+vers un autre projet ; filtrer par projet ou par statut (ou en cliquant sur un projet de la barre latérale) ;
+tableau de bord (total, à faire, terminées, barre de progression). Supprimer un projet supprime ses tâches
+(même transaction).
+
+**Design** : barre latérale dédiée aux projets (création et liste, une couleur par projet), carte « Nouvelle
+tâche » qui devient « Modifier la tâche » en édition, notifications d'enregistrement, mode sombre automatique,
+affichage adapté au téléphone. Le HTML garde les mêmes repères (`data-testid`, libellés des boutons) pour que les
+scénarios BDD restent valables après un changement de présentation.
 
 ## Installation et lancement
 
@@ -34,7 +46,7 @@ Prérequis : **Node.js 20 ou plus** (`node -v`).
 ```
 npm install
 npx playwright install chromium     # télécharge le navigateur de test (une seule fois)
-npm test                            # lance les 44 scénarios
+npm test                            # tests unitaires + couverture, puis les 40 scénarios BDD
 npm start                           # lance l'application sur http://localhost:3000
 ```
 
@@ -65,33 +77,54 @@ auto-incrémentées ; référence d'une tâche vers son projet ; écriture des m
 dans une seule transaction ; refus d'un doublon par la base (`ConstraintError`) ; données conservées après
 rechargement de la page et après fermeture de l'onglet ; base vide dans un nouveau profil.
 
-## Test de connexion à GitHub
+## Tests unitaires, couverture, mutation, pairwise et ulp
 
-Par défaut, les scénarios de `connexion_github.feature` s'exécutent sur un **faux site de connexion local**
-(`/mock/github/login`) qui reprend les champs et messages de GitHub. Compte de démonstration du faux site :
-`etudiant-test` / `MotDePasse!42` (ce ne sont pas de vrais identifiants). Ce choix rend les tests
-reproductibles, utilisables en intégration continue et sans risque pour un vrai compte.
+En plus du BDD, ce projet utilise les techniques du cours (JUnit, JaCoCo, PIT, Jenny, ulp). Le projet est en
+**JavaScript** : JUnit, JaCoCo et PIT sont des outils pour Java et ne s'appliquent pas à du code JavaScript.
+On utilise donc leurs **équivalents JavaScript**, qui appliquent les mêmes idées :
 
-Le scénario marqué **`@reel`** vise le **vrai github.com** avec VOTRE compte. Il est ignoré tant que les
-variables d'environnement ne sont pas définies :
+| Technique du cours | Outil utilisé ici | Rôle |
+|---|---|---|
+| JUnit (tests unitaires, `@ParameterizedTest`) | **Vitest** (`test`, `test.each`, rapport JUnit XML) | tests unitaires de la logique métier |
+| JaCoCo (couverture) | **Vitest + V8** (`--coverage`, seuils) | couverture des instructions, branches, fonctions, lignes ; échec sous les seuils |
+| PIT (test de mutation) | **StrykerJS** | injecte des défauts dans le code et vérifie que les tests les détectent |
+| Jenny (pairwise) | `tests-unitaires/outils/pairwise.js` | génère les combinaisons de tests ; lit aussi la sortie du vrai Jenny |
+| ulp (tolérance en flottants) | `tests-unitaires/outils/ulp.js` | compare des nombres décimaux à N ulps près |
+
+**Ce qui est testé unitairement** : `app/js/db.js` (toute la couche IndexedDB, avec `fake-indexeddb` pour simuler la base dans Node) et `app/js/statistiques.js` (pluriel, couleur, avancement). L'interface `app.js` (DOM) est couverte par les scénarios BDD.
 
 ```
-$env:GITHUB_USERNAME = "mon-identifiant"      # l'identifiant, pas l'adresse e-mail
-$env:GITHUB_PASSWORD = "mon-mot-de-passe"
-npm run test:reel
+npm run test:unit        # Vitest : tests unitaires + couverture (échoue sous 90 % lignes, 80 % branches)
+npm run test:bdd         # Cucumber : scénarios BDD
+npm test                 # les deux, à la suite
+npm run test:mutation    # StrykerJS : test de mutation (quelques minutes)
 ```
 
-Précautions : n'écrivez **jamais** vos identifiants dans le code ni dans le dépôt ; préférez un compte de test ;
-si votre compte a l'authentification à deux facteurs, GitHub demandera un code ou une vérification de
-l'appareil et le test s'arrêtera avec un message explicatif ; des connexions automatisées répétées peuvent
-déclencher un captcha ou un blocage temporaire. Ce scénario réel n'est pas lancé par la CI.
+Rapports : `reports/couverture/index.html` (couverture), `reports/mutation/index.html` (mutation),
+`reports/junit-unitaires.xml` (JUnit XML), `reports/cucumber.html` (BDD).
 
-**Facebook** n'est pas fourni : automatiser la connexion à Facebook va à l'encontre de ses conditions
-d'utilisation et déclenche rapidement des blocages de compte.
+**Résultats mesurés** :
+
+| Mesure | Résultat |
+|---|---|
+| Tests unitaires | **109** réussis |
+| Couverture (`db.js` et `statistiques.js`) | **100 %** instructions, branches, fonctions et lignes |
+| Score de mutation (StrykerJS) | **96,96 %** (255 mutants tués sur 263 ; seuil d'échec : 80 %) |
+| Scénarios BDD | **40** réussis |
+
+**Pairwise (équivalent de Jenny)** : la création d'une tâche a 4 paramètres (titre, description, projet, priorité) : 5 × 3 × 3 × 4 = 180 combinaisons exhaustives, ramenées à **20 cas** par le pairwise ; l'oracle (la spécification) est écrit indépendamment du code.
+Avec le vrai Jenny : `jenny -n2 3 3 3 > cas.txt`, puis `depuisSortieJenny(texte, 3)` (dans `pairwise.js`) lit le fichier.
+
+**ulp** : l'avancement `terminées / total` est un nombre décimal : le test vérifie que « part terminée + part restante = 1 » à 2 ulps près pour tous les totaux de 1 à 60, et que 1/3 est à 0 ulp de sa valeur arrondie.
+
+**Mutation** : StrykerJS modifie le code (opérateur `<` changé en `<=`, constante changée, condition inversée,
+etc.) et relance les tests : un mutant « tué » est un défaut détecté, un mutant « survivant » montre une
+lacune des tests. Le rapport HTML liste chaque mutant. Les mutants qui survivent encore sont du code défensif
+qu'aucun scénario public ne peut atteindre.
 
 ## Intégration continue : les tests se lancent à chaque push
 
-Le fichier `.github/workflows/ci.yml` lance `npm test` sur GitHub à chaque `push` et à chaque pull request.
+Le fichier `.github/workflows/ci.yml` lance, sur GitHub, à chaque `push` et à chaque pull request : les tests unitaires avec couverture, les tests BDD et le test de mutation.
 
 1. Créer un dépôt vide sur github.com (sans README).
 2. Dans le dossier du projet :

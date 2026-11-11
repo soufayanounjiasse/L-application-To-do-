@@ -96,6 +96,23 @@ Fonctionnalité: Gestion des tâches
     Alors la liste des tâches contient "Relire le chapitre 1"
     Et la liste des tâches ne contient pas "Rédiger le plan"
 
+  Scénario: Le tableau de bord résume l'avancement
+    Soit la tâche "Rédiger le plan" existe dans le projet "Mémoire"
+    Et la tâche "Relire le chapitre 1" existe dans le projet "Mémoire"
+    Quand je termine la tâche "Relire le chapitre 1"
+    Alors le tableau de bord affiche 2 au total, 1 à faire et 1 terminée
+
+  Scénario: Cliquer sur un projet affiche seulement ses tâches
+    Soit le projet "Loisirs" existe
+    Et la tâche "Rédiger le plan" existe dans le projet "Mémoire"
+    Et la tâche "Réserver le billet" existe dans le projet "Loisirs"
+    Quand je clique sur le projet "Loisirs"
+    Alors la liste des tâches contient "Réserver le billet"
+    Et la liste des tâches ne contient pas "Rédiger le plan"
+    Quand j'affiche toutes les tâches
+    Alors la liste des tâches contient "Rédiger le plan"
+    Et la liste des tâches contient "Réserver le billet"
+
   Plan du scénario: Les trois priorités sont acceptées
     Quand j'ajoute la tâche "<titre>" au projet "Mémoire" avec la priorité "<priorite>" et la description "<description>"
     Alors la tâche "<titre>" a la priorité "<priorite>"

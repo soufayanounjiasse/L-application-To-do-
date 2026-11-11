@@ -22,11 +22,7 @@ AfterAll(async function () {
   if (serveur) await serveur.arreter();
 });
 
-Before(async function (scenario) {
-  this.reel = scenario.pickle.tags.some((tag) => tag.name === '@reel');
-  if (this.reel && !(process.env.GITHUB_USERNAME && process.env.GITHUB_PASSWORD)) {
-    return 'skipped';                                            // pas d'identifiants : scénario ignoré
-  }
+Before(async function () {
   this.baseUrl = serveur.url;
   this.navigateur = navigateur;
   this.autresContextes = [];

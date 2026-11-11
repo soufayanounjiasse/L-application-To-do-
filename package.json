@@ -5,8 +5,10 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "test": "cucumber-js",
-    "test:reel": "cucumber-js --profile reel",
+    "test": "npm run test:unit && npm run test:bdd",
+    "test:unit": "vitest run --coverage",
+    "test:bdd": "cucumber-js",
+    "test:mutation": "stryker run",
     "navigateurs": "playwright install chromium"
   },
   "engines": {
@@ -15,6 +17,11 @@
   "devDependencies": {
     "@cucumber/cucumber": "13.3.0",
     "@playwright/test": "1.56.0",
-    "playwright": "1.56.0"
+    "@stryker-mutator/core": "^10.1.1",
+    "@stryker-mutator/vitest-runner": "^10.1.1",
+    "@vitest/coverage-v8": "^5.1.0",
+    "fake-indexeddb": "^6.2.8",
+    "playwright": "1.56.0",
+    "vitest": "^5.1.0"
   }
 }
